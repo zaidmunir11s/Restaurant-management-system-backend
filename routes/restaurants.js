@@ -12,6 +12,8 @@ const {
 const auth = require('../middleware/auth');
 const { checkRole } = require('../middleware/roleCheck');
 
+
+
 // @route   GET /api/restaurants
 // @desc    Get all restaurants
 // @access  Private

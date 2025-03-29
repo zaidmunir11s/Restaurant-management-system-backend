@@ -3,6 +3,7 @@ const MenuItem = require('../models/MenuItem');
 const Category = require('../models/Category');
 const Restaurant = require('../models/Restaurant');
 const Branch = require('../models/Branch');
+const { processArModel } = require('../utils/helper');
 
 // Helper to check authorization
 const checkMenuAuth = async (req, restaurantId, branchId) => {
@@ -120,7 +121,7 @@ exports.getMenuItemById = async (req, res) => {
 // Create menu item
 exports.createMenuItem = async (req, res) => {
   try {
-    const { 
+    let { 
       title, description, price, category, status, 
       restaurantId, branchId, imageUrl, modelUrl, 
       isVegetarian, isVegan, isGlutenFree, featured 
@@ -131,7 +132,7 @@ exports.createMenuItem = async (req, res) => {
     if (!isAuthorized) {
       return res.status(403).json({ message: 'Not authorized' });
     }
-    
+     modelUrl = await processArModel(req?.file?.path);
     // Create new menu item
     const menuItem = new MenuItem({
       title,
@@ -187,7 +188,9 @@ exports.updateMenuItem = async (req, res) => {
     if (!menuItem) {
       return res.status(404).json({ message: 'Menu item not found' });
     }
-    
+    if(req?.file?.path){
+      menuItemFields.modelUrl = await processArModel(req?.file?.path);
+    }
     // Check authorization
     const isAuthorized = await checkMenuAuth(req, menuItem.restaurantId, menuItem.branchId);
     if (!isAuthorized) {

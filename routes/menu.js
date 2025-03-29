@@ -12,10 +12,14 @@ const {
 } = require('../controllers/menuController');
 const auth = require('../middleware/auth');
 
+const multer= require("multer");
+
+const upload = multer({ dest: "uploads/" });
+
 // @route   GET /api/menu
 // @desc    Get menu items
 // @access  Private
-router.get('/', auth, getMenuItems);
+router.get('/', auth,getMenuItems);
 
 // @route   GET /api/menu/:id
 // @desc    Get menu item by ID
@@ -25,12 +29,12 @@ router.get('/:id', auth, getMenuItemById);
 // @route   POST /api/menu
 // @desc    Create a menu item
 // @access  Private (Owner, Manager with permission)
-router.post('/', auth, createMenuItem);
+router.post('/', auth,upload.single("modelUrl"),  createMenuItem);
 
 // @route   PUT /api/menu/:id
 // @desc    Update a menu item
 // @access  Private (Owner, Manager with permission)
-router.put('/:id', auth, updateMenuItem);
+router.put('/:id', auth,upload.single("modelUrl"),  updateMenuItem);
 
 // @route   DELETE /api/menu/:id
 // @desc    Delete a menu item
