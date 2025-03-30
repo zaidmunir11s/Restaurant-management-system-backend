@@ -1,0 +1,4 @@
+{
+    "mongoURI": "mongodb+srv://Zaidmunir11s:Zaid123@cluster1.eayfw.mongodb.net/restaurant_management?retryWrites=true&w=majority",
+    "jwtSecret": "mySecretToken123"
+  }

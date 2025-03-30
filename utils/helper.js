@@ -1,7 +1,8 @@
-import AWS from 'aws-sdk';
-import { exec } from 'child_process';
-import path from 'path';
-import fs from 'fs';
+// utils/helper.js
+const AWS = require('aws-sdk');
+const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 const s3 = new AWS.S3({
     endpoint: `https://18d63ffe49104017f7bcb222d2aa6ccb.r2.cloudflarestorage.com`,
@@ -14,7 +15,7 @@ const s3 = new AWS.S3({
     s3ForcePathStyle: true,
 });
 
-export const processArModel = async (usdzFilePath) => {
+const processArModel = async (usdzFilePath) => {
     const glbFilePath = path.join(path.dirname(usdzFilePath), "output.glb");
 
     try {
@@ -30,7 +31,7 @@ export const processArModel = async (usdzFilePath) => {
     }
 };
 
-export const convertUsdzToGlb = (usdzFilePath, glbFilePath) => {
+const convertUsdzToGlb = (usdzFilePath, glbFilePath) => {
     return new Promise((resolve, reject) => {
       const command = `dotnet /Users/codify/Downloads/ar-backend/bin/Debug/net9.0/USDZtoGLTFConverter.dll ${usdzFilePath} ${glbFilePath}`;
       exec(command, (error, stdout, stderr) => {
@@ -43,7 +44,7 @@ export const convertUsdzToGlb = (usdzFilePath, glbFilePath) => {
     });
 };
 
-export const uploadToR2 = async (filePath) => {
+const uploadToR2 = async (filePath) => {
     const fileStream = fs.createReadStream(filePath);
     const fileName = `converted-${Date.now()}.glb`;
 
@@ -56,4 +57,10 @@ export const uploadToR2 = async (filePath) => {
       .promise();
 
     return `https://menu-reality.com/${fileName}`;
+};
+
+module.exports = {
+  processArModel,
+  convertUsdzToGlb,
+  uploadToR2
 };
