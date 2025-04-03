@@ -2,7 +2,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// models/User.js modifications
 const UserSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -25,33 +24,24 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: 'user' // Can be any custom role name
   },
-  // Allow multiple restaurants and branches
-  restaurants: [{
+  restaurantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Restaurant'
-  }],
-  branches: [{
+  },
+  branchId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Branch'
-  }],
+  },
   permissions: {
-    editRestaurantDetails: {
+    manageUsers: {
       type: Boolean,
       default: false
     },
-    createBranches: {
+    manageRestaurants: {
       type: Boolean,
       default: false
     },
-    editBranchInfo: {
-      type: Boolean,
-      default: false
-    },
-    editMenu: {
-      type: Boolean,
-      default: false
-    },
-    editTables: {
+    manageBranches: {
       type: Boolean,
       default: false
     },
@@ -59,6 +49,17 @@ const UserSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     }
+  },
+  // New branch-specific permissions
+  branchPermissions: {
+    menu: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Branch'
+    }],
+    tables: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Branch'
+    }]
   },
   createdAt: {
     type: Date,

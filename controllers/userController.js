@@ -1,5 +1,7 @@
 // controllers/userController.js
 const User = require('../models/User');
+const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -27,31 +29,32 @@ exports.getUserById = async (req, res) => {
 };
 
 // Create user (admin function)
+// controllers/userController.js - Update the createUser function
 exports.createUser = async (req, res) => {
   try {
-    console.log('Create user request received:', req.body);
-    
-    // Extract fields from request
     const { 
       firstName, lastName, email, password, 
-      role, restaurantId, branchId, permissions 
+      role, restaurantId, branchId, permissions, branchPermissions 
     } = req.body;
     
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' });
-    }
-    
-    // Create user object
+    // Create user object with all fields
     const userData = { 
-      firstName, lastName, email, password, role 
+      firstName, lastName, email, password, role,
+      permissions: permissions || {
+        manageUsers: false,
+        manageRestaurants: false,
+        manageBranches: false,
+        accessPOS: true
+      },
+      branchPermissions: {
+        menu: branchPermissions?.menu || [],
+        tables: branchPermissions?.tables || []
+      }
     };
     
-    // Add optional fields
+    // Add IDs if present
     if (restaurantId) userData.restaurantId = restaurantId;
     if (branchId) userData.branchId = branchId;
-    if (permissions) userData.permissions = permissions;
     
     console.log('Creating user with data:', userData);
     
@@ -60,7 +63,7 @@ exports.createUser = async (req, res) => {
     await user.save();
     
     // Return user without password
-    const userResponse = { ...user.toObject() };
+    const userResponse = user.toObject();
     delete userResponse.password;
     
     res.status(201).json(userResponse);
@@ -70,42 +73,56 @@ exports.createUser = async (req, res) => {
   }
 };
 
-// Update user
-// controllers/userController.js - update user function
+// controllers/userController.js - Update the updateUser function
 exports.updateUser = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, role, restaurants, branches, permissions } = req.body;
-    
-    // Build user object
-    const userFields = {};
-    if (firstName) userFields.firstName = firstName;
-    if (lastName) userFields.lastName = lastName;
-    if (email) userFields.email = email;
-    if (password && password.trim() !== '') {
-      // Only hash and update password if it's provided
-      const salt = await bcrypt.genSalt(10);
-      userFields.password = await bcrypt.hash(password, salt);
-    }
-    if (role) userFields.role = role;
-    if (restaurants) userFields.restaurants = restaurants;
-    if (branches) userFields.branches = branches;
-    if (permissions) userFields.permissions = permissions;
+    const { 
+      firstName, lastName, email, password, 
+      role, restaurantId, branchId, permissions, branchPermissions 
+    } = req.body;
     
     let user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Update user
-    user = await User.findByIdAndUpdate(
-      req.params.id,
-      { $set: userFields },
-      { new: true }
-    ).select('-password');
+    // Update fields one by one to ensure proper handling
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (email) user.email = email;
     
-    res.json(user);
+    if (password && password.trim() !== '') {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+    
+    if (role) user.role = role;
+    if (restaurantId !== undefined) user.restaurantId = restaurantId;
+    if (branchId !== undefined) user.branchId = branchId;
+    
+    // Update permissions
+    if (permissions) {
+      user.permissions = permissions;
+    }
+    
+    // Update branch permissions
+    if (branchPermissions) {
+      user.branchPermissions = {
+        menu: branchPermissions.menu || [],
+        tables: branchPermissions.tables || []
+      };
+    }
+    
+    // Save the updated user
+    await user.save();
+    
+    // Return updated user without password
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    
+    res.json(userResponse);
   } catch (err) {
-    console.error(err);
+    console.error('Error updating user:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
