@@ -50,6 +50,10 @@ exports.register = async (req, res) => {
 };
 
 // Login User
+// controllers/authController.js - Fix the login function to include branch permissions in the token
+
+// controllers/authController.js
+// In controllers/authController.js - ensure login is properly comparing passwords
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -60,8 +64,11 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     
-    // Verify password
+    // Verify password - include debug output
+    console.log('Comparing passwords for user:', email);
     const isMatch = await user.comparePassword(password);
+    console.log('Password match result:', isMatch);
+    
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -86,7 +93,6 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 // Get current user
 exports.getCurrentUser = async (req, res) => {
   try {
